@@ -14,6 +14,7 @@
 
 #include <list>
 #include <memory>
+#include <optional>
 #include <shared_mutex>
 #include <unordered_map>
 #include <vector>
@@ -124,6 +125,8 @@ class BufferPoolManager {
   auto FlushPage(page_id_t page_id) -> bool;
   void FlushAllPages();
   auto GetPinCount(page_id_t page_id) -> std::optional<size_t>;
+  auto FindPage(frame_id_t evicted_frame_id) -> std::optional<page_id_t>;
+  auto AcquireRWLock(frame_id_t frame_id) -> bool;
 
  private:
   /** @brief The number of frames in the buffer pool. */
