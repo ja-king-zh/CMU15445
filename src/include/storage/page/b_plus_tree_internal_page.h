@@ -71,7 +71,8 @@ class BPlusTreeInternalPage : public BPlusTreePage {
    * @param value The value to search for
    * @return The index that corresponds to the specified value
    */
-  auto ValueIndex(const ValueType &value) const -> int;
+  //auto ValueIndex(const ValueType &value) const -> int;
+  void SetValueAt(int index, const ValueType& value);
 
   /**
    * @param index The index to search for

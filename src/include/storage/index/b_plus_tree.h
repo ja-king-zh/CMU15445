@@ -37,6 +37,7 @@ struct PrintableBPlusTree;
  *
  * Hint: This class is designed to help you keep track of the pages
  * that you're modifying or accessing.
+ * 提示：此类旨在帮助您跟踪您正在修改或访问的页面。
  */
 class Context {
  public:
@@ -52,6 +53,8 @@ class Context {
 
   // You may want to use this when getting value, but not necessary.
   std::deque<ReadPageGuard> read_set_;
+
+  page_id_t page_id_{INVALID_PAGE_ID};
 
   auto IsRootPage(page_id_t page_id) -> bool { return page_id == root_page_id_; }
 };
@@ -77,6 +80,12 @@ class BPlusTree {
 
   // Remove a key and its value from this B+ tree.
   void Remove(const KeyType &key);
+
+  auto GetLeafPage(BPlusTreePage* res, Context &ctx, const KeyType &key) -> BPlusTreePage*;
+  auto GetBPlusTreePage(page_id_t ans, Context &ctx) -> BPlusTreePage*;
+  void CtxInit(Context &ctx, WritePageGuard guard);
+  void InsertInterval(InternalPage* cur, const KeyType &key, const page_id_t value, Context &ctx);
+
 
   // Return the value associated with a given key
   auto GetValue(const KeyType &key, std::vector<ValueType> *result) -> bool;
