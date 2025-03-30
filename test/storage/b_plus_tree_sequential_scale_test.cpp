@@ -27,7 +27,7 @@ using bustub::DiskManagerUnlimitedMemory;
 /**
  * (Fall 2024) You should pass this test after finishing insertion and point search.
  */
-TEST(BPlusTreeTests, DISABLED_BasicScaleTest) {  // NOLINT
+TEST(BPlusTreeTests, BasicScaleTest) {  // NOLINT
   // create KeyComparator and index schema
   auto key_schema = ParseCreateStatement("a bigint");
   GenericComparator<8> comparator(key_schema.get());
@@ -54,17 +54,29 @@ TEST(BPlusTreeTests, DISABLED_BasicScaleTest) {  // NOLINT
     int64_t value = key & 0xFFFFFFFF;
     rid.Set(static_cast<int32_t>(key >> 32), value);
     index_key.SetFromInteger(key);
+
     tree.Insert(index_key, rid);
   }
+
   std::vector<RID> rids;
   for (auto key : keys) {
     rids.clear();
     index_key.SetFromInteger(key);
     tree.GetValue(index_key, &rids);
+
     ASSERT_EQ(rids.size(), 1);
 
     int64_t value = key & 0xFFFFFFFF;
     ASSERT_EQ(rids[0].GetSlotNum(), value);
+  }
+  for (auto key : keys) {
+    index_key.SetFromInteger(key);
+    std::cout << key << std::endl;
+    if (key == 172) {
+      tree.Draw(bpm, "/home/jaking/bustub/out.txt");
+    }
+    tree.Remove(index_key);
+
   }
   delete bpm;
 }

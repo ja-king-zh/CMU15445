@@ -56,6 +56,20 @@ void InsertHelper(BPlusTree<GenericKey<8>, RID, GenericComparator<8>> *tree, con
     tree->Insert(index_key, rid);
   }
 }
+void InsertHelper2(BPlusTree<GenericKey<8>, RID, GenericComparator<8>> *tree,BufferPoolManager* bpm, const std::vector<int64_t> &keys,
+                  __attribute__((unused)) uint64_t thread_itr = 0) {
+  GenericKey<8> index_key;
+  RID rid;
+
+  for (auto key : keys) {
+    int64_t value = key & 0xFFFFFFFF;
+    rid.Set(static_cast<int32_t>(key >> 32), value);
+    index_key.SetFromInteger(key);
+    tree->Draw(bpm, "/home/jaking/bustub/out.txt");
+    tree->Insert(index_key, rid);
+    
+  }
+}
 
 // helper function to seperate insert
 void InsertHelperSplit(BPlusTree<GenericKey<8>, RID, GenericComparator<8>> *tree, const std::vector<int64_t> &keys,
@@ -81,6 +95,17 @@ void DeleteHelper(BPlusTree<GenericKey<8>, RID, GenericComparator<8>> *tree, con
   for (auto key : remove_keys) {
     index_key.SetFromInteger(key);
     tree->Remove(index_key);
+  }
+}
+void DeleteHelper2(BPlusTree<GenericKey<8>, RID, GenericComparator<8>> *tree, BufferPoolManager*bpm, const std::vector<int64_t> &remove_keys,
+                  __attribute__((unused)) uint64_t thread_itr = 0) {
+  GenericKey<8> index_key;
+
+  for (auto key : remove_keys) {
+    index_key.SetFromInteger(key);
+    tree->Remove(index_key);
+
+    tree->Draw(bpm, "/home/jaking/bustub/out.txt");
   }
 }
 
@@ -346,8 +371,8 @@ void MixTest1Call() {
     // Insert all the keys to delete
     InsertHelper(&tree, for_delete);
 
-    auto insert_task = [&](int tid) { InsertHelper(&tree, for_insert); };
-    auto delete_task = [&](int tid) { DeleteHelper(&tree, for_delete); };
+    auto insert_task = [&](int tid) { InsertHelper2(&tree,bpm, for_insert); };
+    auto delete_task = [&](int tid) { DeleteHelper2(&tree, bpm, for_delete); };
     std::vector<std::function<void(int)>> tasks;
     tasks.emplace_back(insert_task);
     tasks.emplace_back(delete_task);
@@ -443,7 +468,7 @@ void MixTest2Call() {
   }
 }
 
-TEST(BPlusTreeConcurrentTest, DISABLED_InsertTest1) {  // NOLINT
+TEST(BPlusTreeConcurrentTest, InsertTest1) {  // NOLINT
   InsertTest1Call();
 }
 
@@ -451,19 +476,19 @@ TEST(BPlusTreeConcurrentTest, DISABLED_InsertTest2) {  // NOLINT
   InsertTest2Call();
 }
 
-TEST(BPlusTreeConcurrentTest, DISABLED_DeleteTest1) {  // NOLINT
+TEST(BPlusTreeConcurrentTest, DeleteTest1) {  // NOLINT
   DeleteTest1Call();
 }
 
-TEST(BPlusTreeConcurrentTest, DISABLED_DeleteTest2) {  // NOLINT
+TEST(BPlusTreeConcurrentTest, DeleteTest2) {  // NOLINT
   DeleteTest2Call();
 }
 
-TEST(BPlusTreeConcurrentTest, DISABLED_MixTest1) {  // NOLINT
+TEST(BPlusTreeConcurrentTest, MixTest1) {  // NOLINT
   MixTest1Call();
 }
 
-TEST(BPlusTreeConcurrentTest, DISABLED_MixTest2) {  // NOLINT
+TEST(BPlusTreeConcurrentTest, MixTest2) {  // NOLINT
   MixTest2Call();
 }
 }  // namespace bustub

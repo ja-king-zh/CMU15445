@@ -97,6 +97,8 @@ TEST(BPlusTreeTests, InsertTest1NoIterator) {
   delete bpm;
 }
 
+
+
 TEST(BPlusTreeTests, InsertTest2) {
   // create KeyComparator and index schema
   auto key_schema = ParseCreateStatement("a bigint");
@@ -117,7 +119,7 @@ TEST(BPlusTreeTests, InsertTest2) {
     rid.Set(static_cast<int32_t>(key >> 32), value);
     index_key.SetFromInteger(key);
     tree.Insert(index_key, rid);
-    tree.Draw(bpm, "/home/jaking/bustub/out.txt");
+
   }
 
 
@@ -135,6 +137,7 @@ TEST(BPlusTreeTests, InsertTest2) {
   int64_t start_key = 1;
   int64_t current_key = start_key;
   for (auto iter = tree.Begin(); iter != tree.End(); ++iter) {
+    //std::cout << iter.page_id_ << std::endl;
     auto pair = *iter;
     auto location = pair.second;
     EXPECT_EQ(location.GetPageId(), 0);
@@ -154,5 +157,69 @@ TEST(BPlusTreeTests, InsertTest2) {
     current_key = current_key + 1;
   }
   delete bpm;
+}
+TEST(BPlusTreeTests, InsertTest3NoIterator) {
+  // create KeyComparator and index schema
+  auto key_schema = ParseCreateStatement("a bigint");
+  GenericComparator<8> comparator(key_schema.get());
+
+  auto disk_manager = std::make_unique<DiskManagerUnlimitedMemory>();
+  auto *bpm = new BufferPoolManager(50, disk_manager.get());
+  // allocate header_page
+  page_id_t page_id = bpm->NewPage();
+  // create b+ tree
+  BPlusTree<GenericKey<8>, RID, GenericComparator<8>> tree("foo_pk", page_id, bpm, comparator, 2, 3);
+  GenericKey<8> index_key;
+  RID rid;
+
+  std::vector<int64_t> keys = {1, 2, 3, 4, 5, 6,7,8,9};
+  for (auto key : keys) {
+    int64_t value = key & 0xFFFFFFFF;
+    rid.Set(static_cast<int32_t>(key >> 32), value);
+    index_key.SetFromInteger(key);
+    tree.Insert(index_key, rid);
+    tree.Draw(bpm, "/home/jaking/bustub/out.txt");
+  }
+  index_key.SetFromInteger(5);
+  tree.Remove(index_key);
+ tree.Draw(bpm, "/home/jaking/bustub/out.txt");
+  // bool is_present;
+  // std::vector<RID> rids;
+
+  // for (auto key : keys) {
+  //   rids.clear();
+  //   index_key.SetFromInteger(key);
+  //   is_present = tree.GetValue(index_key, &rids);
+
+  //   EXPECT_EQ(is_present, true);
+  //   EXPECT_EQ(rids.size(), 1);
+  //   EXPECT_EQ(rids[0].GetPageId(), 0);
+  //   int64_t value = key & 0xFFFFFFFF;
+  //   EXPECT_EQ(rids[0].GetSlotNum(), value);
+  // }
+  delete bpm;
+}
+TEST(BPlusTreeTests, DISABLED_InsertTest3) {
+  // create KeyComparator and index schema
+  auto key_schema = ParseCreateStatement("a bigint");
+  GenericComparator<8> comparator(key_schema.get());
+
+  auto disk_manager = std::make_unique<DiskManagerUnlimitedMemory>();
+  auto *bpm = new BufferPoolManager(50, disk_manager.get());
+  // allocate header_page
+  page_id_t page_id = bpm->NewPage();
+  // create b+ tree
+  BPlusTree<GenericKey<8>, RID, GenericComparator<8>> tree("foo_pk", page_id, bpm, comparator, 3, 4);
+  GenericKey<8> index_key;
+  RID rid;
+
+  std::vector<int64_t> keys = {1, 2,3,4,5};
+  for (auto key : keys) {
+    int64_t value = key & 0xFFFFFFFF;
+    rid.Set(static_cast<int32_t>(key >> 32), value);
+    index_key.SetFromInteger(key);
+    tree.Insert(index_key, rid);
+    //tree.Draw(bpm, "/home/jaking/bustub/out.txt");
+  }
 }
 }  // namespace bustub

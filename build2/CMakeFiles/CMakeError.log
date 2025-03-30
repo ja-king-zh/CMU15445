@@ -1,0 +1,182 @@
+Determining if the function dwarf_producer_init_c exists failed with the following output:
+Change Dir: /home/jaking/bustub/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_cd213/fast && /usr/bin/make -f CMakeFiles/cmTC_cd213.dir/build.make CMakeFiles/cmTC_cd213.dir/build
+make[1]: Entering directory '/home/jaking/bustub/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_cd213.dir/CheckFunctionExists.c.o
+/usr/bin/cc  -I/usr/include/libdwarf  -DCHECK_FUNCTION_EXISTS=dwarf_producer_init_c -std=c++0x -fPIE   -o CMakeFiles/cmTC_cd213.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+cc1: warning: command line option ‘-std=c++11’ is valid for C++/ObjC++ but not for C
+Linking C executable cmTC_cd213
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_cd213.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=dwarf_producer_init_c -std=c++0x    CMakeFiles/cmTC_cd213.dir/CheckFunctionExists.c.o  -o cmTC_cd213  /usr/lib/x86_64-linux-gnu/libdwarf.so /usr/lib/x86_64-linux-gnu/libelf.so 
+/usr/bin/ld: CMakeFiles/cmTC_cd213.dir/CheckFunctionExists.c.o: in function `main':
+CheckFunctionExists.c:(.text+0x14): undefined reference to `dwarf_producer_init_c'
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_cd213.dir/build.make:89: cmTC_cd213] Error 1
+make[1]: Leaving directory '/home/jaking/bustub/build/CMakeFiles/CMakeTmp'
+make: *** [Makefile:121: cmTC_cd213/fast] Error 2
+
+
+
+Performing C SOURCE FILE Test CMAKE_HAVE_LIBC_PTHREAD failed with the following output:
+Change Dir: /home/jaking/bustub/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_639a5/fast && /usr/bin/make -f CMakeFiles/cmTC_639a5.dir/build.make CMakeFiles/cmTC_639a5.dir/build
+make[1]: Entering directory '/home/jaking/bustub/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_639a5.dir/src.c.o
+/usr/bin/cc   -DCMAKE_HAVE_LIBC_PTHREAD -std=c++0x -fPIE   -o CMakeFiles/cmTC_639a5.dir/src.c.o   -c /home/jaking/bustub/build/CMakeFiles/CMakeTmp/src.c
+cc1: warning: command line option ‘-std=c++11’ is valid for C++/ObjC++ but not for C
+Linking C executable cmTC_639a5
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_639a5.dir/link.txt --verbose=1
+/usr/bin/cc  -DCMAKE_HAVE_LIBC_PTHREAD -std=c++0x    CMakeFiles/cmTC_639a5.dir/src.c.o  -o cmTC_639a5 
+/usr/bin/ld: CMakeFiles/cmTC_639a5.dir/src.c.o: in function `main':
+src.c:(.text+0x46): undefined reference to `pthread_create'
+/usr/bin/ld: src.c:(.text+0x52): undefined reference to `pthread_detach'
+/usr/bin/ld: src.c:(.text+0x63): undefined reference to `pthread_join'
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_639a5.dir/build.make:87: cmTC_639a5] Error 1
+make[1]: Leaving directory '/home/jaking/bustub/build/CMakeFiles/CMakeTmp'
+make: *** [Makefile:121: cmTC_639a5/fast] Error 2
+
+
+Source file was:
+#include <pthread.h>
+
+void* test_func(void* data)
+{
+  return data;
+}
+
+int main(void)
+{
+  pthread_t thread;
+  pthread_create(&thread, NULL, test_func, NULL);
+  pthread_detach(thread);
+  pthread_join(thread, NULL);
+  pthread_atfork(NULL, NULL, NULL);
+  pthread_exit(NULL);
+
+  return 0;
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /home/jaking/bustub/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_04de8/fast && /usr/bin/make -f CMakeFiles/cmTC_04de8.dir/build.make CMakeFiles/cmTC_04de8.dir/build
+make[1]: Entering directory '/home/jaking/bustub/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_04de8.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create -std=c++0x -fPIE   -o CMakeFiles/cmTC_04de8.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+cc1: warning: command line option ‘-std=c++11’ is valid for C++/ObjC++ but not for C
+Linking C executable cmTC_04de8
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_04de8.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=pthread_create -std=c++0x    CMakeFiles/cmTC_04de8.dir/CheckFunctionExists.c.o  -o cmTC_04de8  -lpthreads 
+/usr/bin/ld: cannot find -lpthreads
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_04de8.dir/build.make:87: cmTC_04de8] Error 1
+make[1]: Leaving directory '/home/jaking/bustub/build/CMakeFiles/CMakeTmp'
+make: *** [Makefile:121: cmTC_04de8/fast] Error 2
+
+
+
+Determining if the function dwarf_producer_init_c exists failed with the following output:
+Change Dir: /home/jaking/bustub/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_36f7a/fast && make[1]: Entering directory '/home/jaking/bustub/build/CMakeFiles/CMakeTmp'
+/usr/bin/make -f CMakeFiles/cmTC_36f7a.dir/build.make CMakeFiles/cmTC_36f7a.dir/build
+make[2]: Entering directory '/home/jaking/bustub/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_36f7a.dir/CheckFunctionExists.c.o
+/usr/bin/cc  -I/usr/include/libdwarf  -DCHECK_FUNCTION_EXISTS=dwarf_producer_init_c -std=c++0x -fPIE   -o CMakeFiles/cmTC_36f7a.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+cc1: warning: command line option ‘-std=c++11’ is valid for C++/ObjC++ but not for C
+Linking C executable cmTC_36f7a
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_36f7a.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=dwarf_producer_init_c -std=c++0x    CMakeFiles/cmTC_36f7a.dir/CheckFunctionExists.c.o  -o cmTC_36f7a  /usr/lib/x86_64-linux-gnu/libdwarf.so /usr/lib/x86_64-linux-gnu/libelf.so 
+/usr/bin/ld: CMakeFiles/cmTC_36f7a.dir/CheckFunctionExists.c.o: in function `main':
+CheckFunctionExists.c:(.text+0x14): undefined reference to `dwarf_producer_init_c'
+collect2: error: ld returned 1 exit status
+make[2]: *** [CMakeFiles/cmTC_36f7a.dir/build.make:89: cmTC_36f7a] Error 1
+make[2]: Leaving directory '/home/jaking/bustub/build/CMakeFiles/CMakeTmp'
+make[1]: *** [Makefile:121: cmTC_36f7a/fast] Error 2
+make[1]: Leaving directory '/home/jaking/bustub/build/CMakeFiles/CMakeTmp'
+
+
+
+Determining if the function dwarf_producer_init_c exists failed with the following output:
+Change Dir: /home/jaking/bustub/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_59dec/fast && /usr/bin/make -f CMakeFiles/cmTC_59dec.dir/build.make CMakeFiles/cmTC_59dec.dir/build
+make[1]: Entering directory '/home/jaking/bustub/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_59dec.dir/CheckFunctionExists.c.o
+/usr/bin/cc  -I/usr/include/libdwarf  -DCHECK_FUNCTION_EXISTS=dwarf_producer_init_c -std=c++0x -fPIE   -o CMakeFiles/cmTC_59dec.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+cc1: warning: command line option ‘-std=c++11’ is valid for C++/ObjC++ but not for C
+Linking C executable cmTC_59dec
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_59dec.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=dwarf_producer_init_c -std=c++0x    CMakeFiles/cmTC_59dec.dir/CheckFunctionExists.c.o  -o cmTC_59dec  /usr/lib/x86_64-linux-gnu/libdwarf.so /usr/lib/x86_64-linux-gnu/libelf.so 
+/usr/bin/ld: CMakeFiles/cmTC_59dec.dir/CheckFunctionExists.c.o: in function `main':
+CheckFunctionExists.c:(.text+0x14): undefined reference to `dwarf_producer_init_c'
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_59dec.dir/build.make:89: cmTC_59dec] Error 1
+make[1]: Leaving directory '/home/jaking/bustub/build/CMakeFiles/CMakeTmp'
+make: *** [Makefile:121: cmTC_59dec/fast] Error 2
+
+
+
+Determining if the function dwarf_producer_init_c exists failed with the following output:
+Change Dir: /home/jaking/bustub/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_6d85f/fast && /usr/bin/make -f CMakeFiles/cmTC_6d85f.dir/build.make CMakeFiles/cmTC_6d85f.dir/build
+make[1]: Entering directory '/home/jaking/bustub/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_6d85f.dir/CheckFunctionExists.c.o
+/usr/bin/cc  -I/usr/include/libdwarf  -DCHECK_FUNCTION_EXISTS=dwarf_producer_init_c -std=c++0x -fPIE   -o CMakeFiles/cmTC_6d85f.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+cc1: warning: command line option ‘-std=c++11’ is valid for C++/ObjC++ but not for C
+Linking C executable cmTC_6d85f
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_6d85f.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=dwarf_producer_init_c -std=c++0x    CMakeFiles/cmTC_6d85f.dir/CheckFunctionExists.c.o  -o cmTC_6d85f  /usr/lib/x86_64-linux-gnu/libdwarf.so /usr/lib/x86_64-linux-gnu/libelf.so 
+/usr/bin/ld: CMakeFiles/cmTC_6d85f.dir/CheckFunctionExists.c.o: in function `main':
+CheckFunctionExists.c:(.text+0x14): undefined reference to `dwarf_producer_init_c'
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_6d85f.dir/build.make:89: cmTC_6d85f] Error 1
+make[1]: Leaving directory '/home/jaking/bustub/build/CMakeFiles/CMakeTmp'
+make: *** [Makefile:121: cmTC_6d85f/fast] Error 2
+
+
+
+Determining if the function dwarf_producer_init_c exists failed with the following output:
+Change Dir: /home/jaking/bustub/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_4e6f8/fast && /usr/bin/make -f CMakeFiles/cmTC_4e6f8.dir/build.make CMakeFiles/cmTC_4e6f8.dir/build
+make[1]: Entering directory '/home/jaking/bustub/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_4e6f8.dir/CheckFunctionExists.c.o
+/usr/bin/cc  -I/usr/include/libdwarf  -DCHECK_FUNCTION_EXISTS=dwarf_producer_init_c -std=c++0x -fPIE   -o CMakeFiles/cmTC_4e6f8.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+cc1: warning: command line option ‘-std=c++11’ is valid for C++/ObjC++ but not for C
+Linking C executable cmTC_4e6f8
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_4e6f8.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=dwarf_producer_init_c -std=c++0x    CMakeFiles/cmTC_4e6f8.dir/CheckFunctionExists.c.o  -o cmTC_4e6f8  /usr/lib/x86_64-linux-gnu/libdwarf.so /usr/lib/x86_64-linux-gnu/libelf.so 
+/usr/bin/ld: CMakeFiles/cmTC_4e6f8.dir/CheckFunctionExists.c.o: in function `main':
+CheckFunctionExists.c:(.text+0x14): undefined reference to `dwarf_producer_init_c'
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_4e6f8.dir/build.make:89: cmTC_4e6f8] Error 1
+make[1]: Leaving directory '/home/jaking/bustub/build/CMakeFiles/CMakeTmp'
+make: *** [Makefile:121: cmTC_4e6f8/fast] Error 2
+
+
+
+Determining if the function dwarf_producer_init_c exists failed with the following output:
+Change Dir: /home/jaking/bustub/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_3e7c2/fast && /usr/bin/make -f CMakeFiles/cmTC_3e7c2.dir/build.make CMakeFiles/cmTC_3e7c2.dir/build
+make[1]: Entering directory '/home/jaking/bustub/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_3e7c2.dir/CheckFunctionExists.c.o
+/usr/bin/cc  -I/usr/include/libdwarf  -DCHECK_FUNCTION_EXISTS=dwarf_producer_init_c -std=c++0x -fPIE   -o CMakeFiles/cmTC_3e7c2.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+cc1: warning: command line option ‘-std=c++11’ is valid for C++/ObjC++ but not for C
+Linking C executable cmTC_3e7c2
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_3e7c2.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=dwarf_producer_init_c -std=c++0x    CMakeFiles/cmTC_3e7c2.dir/CheckFunctionExists.c.o  -o cmTC_3e7c2  /usr/lib/x86_64-linux-gnu/libdwarf.so /usr/lib/x86_64-linux-gnu/libelf.so 
+/usr/bin/ld: CMakeFiles/cmTC_3e7c2.dir/CheckFunctionExists.c.o: in function `main':
+CheckFunctionExists.c:(.text+0x14): undefined reference to `dwarf_producer_init_c'
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_3e7c2.dir/build.make:89: cmTC_3e7c2] Error 1
+make[1]: Leaving directory '/home/jaking/bustub/build/CMakeFiles/CMakeTmp'
+make: *** [Makefile:121: cmTC_3e7c2/fast] Error 2
+
+
+

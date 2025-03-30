@@ -12,13 +12,12 @@
 
 #pragma once
 
-#include <cstddef>
-#include <exception>
-#include <iostream>
+#include <algorithm>
 #include <limits>
 #include <list>
 #include <mutex>  // NOLINT
 #include <optional>
+#include <set>
 #include <unordered_map>
 #include <vector>
 
@@ -30,18 +29,34 @@ namespace bustub {
 enum class AccessType { Unknown = 0, Lookup, Scan, Index };
 
 class LRUKNode {
-  friend class LRUKReplacer;
-
- private:
+ public:
   /** History of last seen K timestamps of this page. Least recent timestamp stored in front. */
   // Remove maybe_unused if you start using them. Feel free to change the member variables as you want.
-
-  std::list<size_t> history_;  //维护history的大小<=k_
-  // size_t k_distance_;
+  LRUKNode() = default;
+  LRUKNode(size_t k, frame_id_t fid) : k_(k), fid_(fid) {}
+  // 记录历史访问时间戳
+  std::list<size_t> history_;
+  // 记录k
+  size_t k_;
+  // 页框号
   frame_id_t fid_;
+  // 是否可以被清除
   bool is_evictable_{false};
-  size_t visited_cnt_;
-  size_t level_;
+};
+
+struct Compare {
+  auto operator()(const LRUKNode *a, const LRUKNode *b) const -> bool {
+    if (a->history_.size() < a->k_ && b->history_.size() < b->k_) {
+      return a->history_.front() < b->history_.front();  // 比较 `front()`
+    }
+    if (a->history_.size() < a->k_) {
+      return true;  // `a` 还不到 `k`，优先淘汰
+    }
+    if (b->history_.size() < b->k_) {
+      return false;  // `b` 还不到 `k`，优先淘汰
+    }
+    return a->history_.back() < b->history_.back();  // 比较 `back()`
+  }
 };
 
 /**
@@ -64,8 +79,9 @@ class LRUKReplacer {
    * @brief a new LRUKReplacer.
    * @param num_frames the maximum number of frames the LRUReplacer will be required to store
    */
+  // 构造函数，传入frame的数量和k值
   explicit LRUKReplacer(size_t num_frames, size_t k);
-
+  // 不允许拷贝构造或者移动构造
   DISALLOW_COPY_AND_MOVE(LRUKReplacer);
 
   /**
@@ -155,23 +171,23 @@ class LRUKReplacer {
    */
   auto Size() -> size_t;
 
-  void CkeckValidFrameID(frame_id_t frame_id) {
-    if (frame_id < 0 || static_cast<size_t>(frame_id) > replacer_size_) {
-      throw std::exception();
-    }
-  }
-
  private:
   // TODO(student): implement me! You can replace these member variables as you like.
   // Remove maybe_unused if you start using them.
+  // replacer
+  std::set<LRUKNode *, Compare> replacer_;
+  // 记录lru节点的map，用frame_id为key
   std::unordered_map<frame_id_t, LRUKNode> node_store_;
+  // 当前的时间戳
   size_t current_timestamp_{0};
+  // 当前frame数量
   size_t curr_size_{0};
+  // replacer的大小
   size_t replacer_size_;
+  // k的值
   size_t k_;
+  // 锁
   std::mutex latch_;
-  std::list<frame_id_t> level2_;  // 存储访问次数大于等于k_的frame
-  std::list<frame_id_t> level1_;  // 存储访问次数小于k_的
 };
 
 }  // namespace bustub

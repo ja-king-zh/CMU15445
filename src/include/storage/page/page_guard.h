@@ -24,17 +24,12 @@ class FrameHeader;
 
 /**
  * @brief An RAII object that grants thread-safe read access to a page of data.
- *授予对数据页的线程安全读取访问权限的 RAII 对象。
  *
  * The _only_ way that the BusTub system should interact with the buffer pool's page data is via page guards. Since
  * `ReadPageGuard` is an RAII object, the system never has to manually lock and unlock a page's latch.
- *BusTub 系统与缓冲池页面数据交互的唯一方式是通过页面保护。由于 `ReadPageGuard` 是一个 RAII
- *对象，因此系统永远不需要手动锁定和解锁页面的闩锁。
  *
  * With `ReadPageGuard`s, there can be multiple threads that share read access to a page's data. However, the existence
  * of any `ReadPageGuard` on a page implies that no thread can be mutating the page's data.
- * 使用 `ReadPageGuard`，可以有多个线程共享对页面数据的读取访问权限。但是，
- * 页面上的任何 `ReadPageGuard` 的存在都意味着没有线程可以改变页面的数据。
  */
 class ReadPageGuard {
   /** @brief Only the buffer pool manager is allowed to construct a valid `ReadPageGuard.` */
@@ -51,11 +46,12 @@ class ReadPageGuard {
    * **Use of an uninitialized page guard is undefined behavior.**
    *
    * In other words, the only way to get a valid `ReadPageGuard` is through the buffer pool manager.
-   * 换句话说，获取有效的“ReadPageGuard”的唯一方法是通过缓冲池管理器。
    */
+  // 默认构造
   ReadPageGuard() = default;
-
+  // 禁止拷贝构造
   ReadPageGuard(const ReadPageGuard &) = delete;
+  // 禁止 =
   auto operator=(const ReadPageGuard &) -> ReadPageGuard & = delete;
   ReadPageGuard(ReadPageGuard &&that) noexcept;
   auto operator=(ReadPageGuard &&that) noexcept -> ReadPageGuard &;
@@ -106,12 +102,9 @@ class ReadPageGuard {
    * Since we must allow for the construction of invalid page guards (see the documentation above), we must maintain
    * some sort of state that tells us if this page guard is valid or not. Note that the default constructor will
    * automatically set this field to `false`.
-   * 由于我们必须允许构造无效页面保护（参见上面的文档），因此我们必须维护某种状态来告诉我们该页面保护是否有效。
-   * 请注意，默认构造函数会自动将此字段设置为“false”。
    *
    * If we did not maintain this flag, then the move constructor / move assignment operators could attempt to destruct
    * or `Drop()` invalid members, causing a segmentation fault.
-   * 如果我们不维护这个标志，那么移动构造函数/移动赋值运算符可能会尝试析构或“Drop（）”无效成员，从而导致分段错误。
    */
   bool is_valid_{false};
 

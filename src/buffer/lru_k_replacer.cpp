@@ -11,157 +11,107 @@
 //===----------------------------------------------------------------------===//
 
 #include "buffer/lru_k_replacer.h"
-#include <cstddef>
-#include <exception>
-#include <iterator>
-#include <limits>
-#include <mutex>
-#include "common/config.h"
 #include "common/exception.h"
 
 namespace bustub {
 
 LRUKReplacer::LRUKReplacer(size_t num_frames, size_t k) : replacer_size_(num_frames), k_(k) {}
 
+// 驱逐与 replacer_ 跟踪的所有其他可驱逐帧相比具有最大后向 k 距离的帧。如果没有可驱逐帧，则返回 std::nullopt。
 auto LRUKReplacer::Evict() -> std::optional<frame_id_t> {
-  std::lock_guard<std::mutex> lock(latch_);
-  size_t tmp_min;
-  int index_min = -1;
-  size_t i = 0;
-  bool flag = false;
-  // 1、在visited_cnt>=k_的情况下，淘汰timestamp最早的那个
-  // 2、有visited_cnt<k的情况下，优先淘汰
-  // 3、有多个+inf时，优先淘汰timestamp最早的那个
-  if (!level1_.empty()) {
-    for (const auto &elem : level1_) {
-      if (!flag && node_store_[elem].is_evictable_) {
-        tmp_min = elem;
-        index_min = i;
-        flag = true;
-      }
-
-      if (node_store_[elem].history_.back() < node_store_[tmp_min].history_.back() && node_store_[elem].is_evictable_) {
-        tmp_min = elem;
-        index_min = i;
-      }
-      ++i;
-    }
-    if (index_min != -1) {
-      auto it1 = level1_.begin();
-      std::advance(it1, index_min);
-      level1_.erase(it1);
-      curr_size_--;
-      node_store_.erase(tmp_min);
-
-      return tmp_min;
-    }
+  std::unique_lock<std::mutex> lock(latch_);
+  // 如果replacer中没有frame，返回空
+  if (replacer_.empty()) {
+    return std::nullopt;
   }
-  if (!level2_.empty()) {
-    i = 0;  // 重置i
-    for (const auto &elem : level2_) {
-      if (!flag && node_store_[elem].is_evictable_) {
-        tmp_min = elem;
-        index_min = i;
-        flag = true;
-      }
-
-      if (node_store_[elem].history_.back() < node_store_[tmp_min].history_.back() && node_store_[elem].is_evictable_) {
-        tmp_min = elem;
-        index_min = i;
-      }
-      ++i;
-    }
-    if (index_min != -1) {
-      auto it2 = level2_.begin();
-      std::advance(it2, index_min);
-      level2_.erase(it2);
-      curr_size_--;
-      node_store_.erase(tmp_min);
-      return tmp_min;
-    }
-  }
-  return std::nullopt;
+  // 找到一个淘汰的frame
+  auto it = replacer_.begin();
+  auto node = *it;
+  auto fid = node->fid_;
+  // 将其从node_store_中删除
+  node_store_.erase(fid);
+  // 将其从replacer中删除
+  replacer_.erase(it);
+  // 减小node_store_实际大小
+  curr_size_--;
+  return fid;
 }
 
+// 记录给定帧在当前时间戳已被访问。应在页面被固定在 BufferPoolManager 中后调用此方法。
 void LRUKReplacer::RecordAccess(frame_id_t frame_id, [[maybe_unused]] AccessType access_type) {
-  std::lock_guard<std::mutex> lock(latch_);
-  auto it = node_store_.find(frame_id);
-  if (it == node_store_.end()) {
-    level1_.push_back(frame_id);
-    node_store_[frame_id].fid_ = frame_id;
-    node_store_[frame_id].level_ = 1;
+  std::unique_lock<std::mutex> lock(latch_);
+  if (static_cast<size_t>(frame_id) > replacer_size_) {
+    // 抛出异常
+    return;
   }
-
-  if (node_store_[frame_id].history_.size() == k_) {  // 如果这个frame的history大小达到临界值了
-    node_store_[frame_id].history_.pop_back();
-  }
-
   current_timestamp_++;
-  node_store_[frame_id].history_.push_front(current_timestamp_);
-
-  node_store_[frame_id].visited_cnt_++;
-
-  if (node_store_[frame_id].visited_cnt_ == k_) {  // 访问次数第一次达到阈值放入level2
-    for (auto it = level1_.begin(); it != level1_.end(); it++) {
-      if (*it == frame_id) {
-        level1_.erase(it);
-        break;
-      }
-    }
-    level2_.push_back(frame_id);
-    node_store_[frame_id].level_ = 2;
+  auto it = node_store_.find(frame_id);
+  // 如果当前frame不在node_store_中，将其加入
+  if (it == node_store_.end()) {
+    node_store_.emplace(frame_id, LRUKNode(k_, frame_id));
+    it = node_store_.find(frame_id);
+  }
+  auto node = &(it->second);
+  if (node->is_evictable_) {
+    replacer_.erase(node);
+  }
+  // 保证历史记录只有k个
+  if (node->history_.size() == k_) {
+    node->history_.pop_front();
+  }
+  // 更新history
+  node->history_.push_back(current_timestamp_);
+  //更新replacer
+  if (node->is_evictable_) {
+    replacer_.insert(node);
   }
 }
 
+/* 此方法控制框架是否可驱逐。它还控制 LRUKReplacer 的大小。当您实现 BufferPoolManager 时，
+ * 您将知道何时调用此函数。具体来说，当页面的引脚数达到 0 时，其对应的框架应标记为可驱逐。
+ */
 void LRUKReplacer::SetEvictable(frame_id_t frame_id, bool set_evictable) {
-  std::lock_guard<std::mutex> lock(latch_);
+  std::unique_lock<std::mutex> lock(latch_);
   auto it = node_store_.find(frame_id);
   if (it == node_store_.end()) {
+    // 抛出异常
     return;
   }
-  if (!node_store_[frame_id].is_evictable_ && set_evictable) {
-    curr_size_++;
+  auto node = &(it->second);
+  if (node->is_evictable_ != set_evictable) {
+    if (set_evictable) {
+      curr_size_++;
+      // 将这个frame放入replacer
+      replacer_.insert(node);
+    } else {
+      curr_size_--;
+      // 将这个frame移出replacer
+      replacer_.erase(node);
+    }
   }
-  if (node_store_[frame_id].is_evictable_ && !set_evictable) {
-    curr_size_--;
-  }
-  node_store_[frame_id].is_evictable_ = set_evictable;
+  node->is_evictable_ = set_evictable;
 }
 
+// 清除与帧相关的所有访问历史记录。仅当在 BufferPoolManager 中删除页面时才应调用此方法。
 void LRUKReplacer::Remove(frame_id_t frame_id) {
-  std::lock_guard<std::mutex> lock(latch_);
-
-  auto it = node_store_.find(frame_id);
-  if (it == node_store_.end()) {
+  std::unique_lock<std::mutex> lock(latch_);
+  if (node_store_.find(frame_id) == node_store_.end()) {
     return;
   }
-
-  if (!node_store_[frame_id].is_evictable_) {
-    throw std::exception();
+  auto node = &(node_store_.find(frame_id)->second);
+  if (!node->is_evictable_) {
+    //抛出异常
+    return;
   }
-
-  if (node_store_[frame_id].level_ == 1) {
-    for (auto it = level1_.begin(); it != level1_.end(); it++) {
-      if (*it == frame_id) {
-        level1_.erase(it);
-        break;
-      }
-    }
-  } else {
-    for (auto it = level2_.begin(); it != level2_.end(); it++) {
-      if (*it == frame_id) {
-        level2_.erase(it);
-        break;
-      }
-    }
-  }
+  // 清除replacer
+  replacer_.erase(node);
+  // node_store_中清除这个frame
   node_store_.erase(frame_id);
+  //  减小node_store_的实际大小
   curr_size_--;
 }
 
-auto LRUKReplacer::Size() -> size_t {
-  std::lock_guard<std::mutex> lock(latch_);
-  return curr_size_;
-}
+// 此方法返回当前位于 LRUKReplacer 中的可驱逐框架的数量。
+auto LRUKReplacer::Size() -> size_t { return curr_size_; }
 
 }  // namespace bustub

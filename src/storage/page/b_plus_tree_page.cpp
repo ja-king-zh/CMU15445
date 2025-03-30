@@ -57,7 +57,7 @@ void BPlusTreePage::SetMaxSize(int size) {
  * But whether you will take ceil() or floor() depends on your implementation
  */
 auto BPlusTreePage::GetMinSize() const -> int {
-  return max_size_ / 2;
+  return (max_size_ + 1) / 2;
 }
 
 }  // namespace bustub

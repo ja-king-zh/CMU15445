@@ -1,0 +1,5 @@
+if(EXISTS "/home/jaking/bustub/build/test/txn_scan_test[1]_tests.cmake")
+  include("/home/jaking/bustub/build/test/txn_scan_test[1]_tests.cmake")
+else()
+  add_test(txn_scan_test_NOT_BUILT txn_scan_test_NOT_BUILT)
+endif()
