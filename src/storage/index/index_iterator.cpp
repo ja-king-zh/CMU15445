@@ -30,7 +30,7 @@ auto INDEXITERATOR_TYPE::IsEnd() -> bool {
 INDEX_TEMPLATE_ARGUMENTS
 auto INDEXITERATOR_TYPE::operator*() -> std::pair<const KeyType &, const ValueType &> {
   //throw std::runtime_error("unimplemented");
-  auto guard = bpm_->ReadPage(page_id_);
+  auto guard = bpm_->WritePage(page_id_);
   auto res = guard.As<B_PLUS_TREE_LEAF_PAGE_TYPE>();
   return std::make_pair(res->KeyAt(index_), res->ValueAt(index_));
 }
@@ -38,7 +38,7 @@ auto INDEXITERATOR_TYPE::operator*() -> std::pair<const KeyType &, const ValueTy
 INDEX_TEMPLATE_ARGUMENTS
 auto INDEXITERATOR_TYPE::operator++() -> INDEXITERATOR_TYPE & {
   //throw std::runtime_error("unimplemented");
-  auto guard = bpm_->ReadPage(page_id_);
+  auto guard = bpm_->WritePage(page_id_);
   auto res = guard.As<B_PLUS_TREE_LEAF_PAGE_TYPE>();
   //std::cout << "page_size:" << res->GetSize() << std::endl;
   if (index_ + 1< res->GetSize()) {

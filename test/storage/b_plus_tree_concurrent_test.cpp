@@ -65,7 +65,7 @@ void InsertHelper2(BPlusTree<GenericKey<8>, RID, GenericComparator<8>> *tree,Buf
     int64_t value = key & 0xFFFFFFFF;
     rid.Set(static_cast<int32_t>(key >> 32), value);
     index_key.SetFromInteger(key);
-    tree->Draw(bpm, "/home/jaking/bustub/out.txt");
+    //tree->Draw(bpm, "/home/jaking/bustub/out.txt");
     tree->Insert(index_key, rid);
     
   }
@@ -105,7 +105,7 @@ void DeleteHelper2(BPlusTree<GenericKey<8>, RID, GenericComparator<8>> *tree, Bu
     index_key.SetFromInteger(key);
     tree->Remove(index_key);
 
-    tree->Draw(bpm, "/home/jaking/bustub/out.txt");
+    //tree->Draw(bpm, "/home/jaking/bustub/out.txt");
   }
 }
 
@@ -370,6 +370,7 @@ void MixTest1Call() {
     }
     // Insert all the keys to delete
     InsertHelper(&tree, for_delete);
+    tree.Draw(bpm, "/home/jaking/bustub/out.txt");
 
     auto insert_task = [&](int tid) { InsertHelper2(&tree,bpm, for_insert); };
     auto delete_task = [&](int tid) { DeleteHelper2(&tree, bpm, for_delete); };
@@ -472,7 +473,7 @@ TEST(BPlusTreeConcurrentTest, InsertTest1) {  // NOLINT
   InsertTest1Call();
 }
 
-TEST(BPlusTreeConcurrentTest, DISABLED_InsertTest2) {  // NOLINT
+TEST(BPlusTreeConcurrentTest, InsertTest2) {  // NOLINT
   InsertTest2Call();
 }
 

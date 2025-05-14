@@ -137,29 +137,6 @@ auto BPLUSTREE_TYPE::Insert(const KeyType &key, const ValueType &value) -> bool 
   //已经有该key了
   //std::unique_lock latch(*bplus_latch_);
   bplus_latch_->lock();
-  if (!IsEmpty()) {
-    WritePageGuard guard = bpm_->WritePage(header_page_id_);
-    auto root_page_pre = guard.As<BPlusTreeHeaderPage>();
-    WritePageGuard root_guard = bpm_->WritePage(root_page_pre->root_page_id_);
-    auto root_page = root_guard.AsMut<BPlusTreePage>();
-    auto res = root_page;
-    Context ctx2;
-    //CtxInit(ctx, std::move(guard));
-    ctx2.root_page_id_ = root_page_pre->root_page_id_;
-    ctx2.page_id_ = root_page_pre->root_page_id_;
-    ctx2.write_set_.push_back(std::move(root_guard));
-
-    auto ans = GetLeafPage(res, ctx2, key);
-    auto cur = reinterpret_cast<LeafPage*>(ans);
-    for (int i = 0; i < cur->GetSize(); i++) {
-      if (comparator_(cur->KeyAt(i), key) == 0) {
-        bplus_latch_->unlock();
-        return false;
-      }
-    }
-  }
-
-
   Context ctx;
   WritePageGuard guard = bpm_->WritePage(header_page_id_);
   ctx.header_page_ = std::move(guard);
@@ -190,29 +167,25 @@ auto BPLUSTREE_TYPE::Insert(const KeyType &key, const ValueType &value) -> bool 
   auto leaf_page = GetLeafPage(res, ctx, key);
   //std::cout << "insert拿到了:" << std::endl;
   auto cur = reinterpret_cast<LeafPage*>(leaf_page);
+  for (int i = 0; i < cur->GetSize(); i++) {
+    if (comparator_(cur->KeyAt(i), key) == 0) {
+      bplus_latch_->unlock();
+      return false;
+    }
+  }
   //当前叶子空间足够，不需要分裂
   //std::cout << "insert拿叶子节点:" << std::endl;
   if (cur->GetSize() < cur->GetMaxSize()) {
+    int i = 0;
+    while (comparator_(key, cur->KeyAt(i)) > 0 && i < cur->GetSize()) i++;
+    for (int j = cur->GetSize(); j > i; j--) {
+      cur->SetKeyAt(j, cur->KeyAt(j - 1));
+      cur->SetValueAt(j, cur->ValueAt(j - 1));
+    }
+    cur->SetKeyAt(i, key);
+    cur->SetValueAt(i, value);
     cur->SetSize(cur->GetSize() + 1);
-    bool flag = true;
-    for (int i = cur->GetSize() - 1; i > 0; i--) {
-      if (comparator_(cur->KeyAt(i - 1), key) < 0) {
-        cur->SetKeyAt(i, key);
-        cur->SetValueAt(i, value);
-        flag = false;
-        break;
-      } else {
-        cur->SetKeyAt(i, cur->KeyAt(i - 1));
-        cur->SetValueAt(i, cur->ValueAt(i - 1));
-      }
-    }
-    if (flag) {
-      cur->SetKeyAt(0, key);
-      cur->SetValueAt(0, value);
-    }
-    //std::cout << "insert拿到了:" << std::endl;
     bplus_latch_->unlock();
-
     return true;
   }
 
@@ -227,36 +200,30 @@ auto BPLUSTREE_TYPE::Insert(const KeyType &key, const ValueType &value) -> bool 
     v[i] = cur->KeyAt(i);
     v2[i] = cur->ValueAt(i);
   }
-  bool flag = true;
-  for (int i = cur->GetSize(); i > 0; i--) {
-    if (comparator_(v[i - 1], key) > 0) {
-      v[i] = v[i - 1];
-      v2[i] = v2[i - 1];
-    } else {
-      v[i] = key;
-      v2[i] = value;
-      flag = false;
-      break;
-    }
+  int i = 0, j;
+  while (comparator_(key, v[i]) > 0 && i < cur->GetSize()) i++;
+  for (int j = cur->GetSize(); j > i; j--) {
+    v[j] = v[j - 1];
+    v2[j] = v2[j - 1];
   }
-  if (flag) {
-    v[0] = key;
-    v2[0] = value;
-  }
-  int mid = (cur->GetSize() + 1) / 2;
-  cur->SetSize(mid);
-  for (int i = 0; i < mid; i ++ ) {
+  v[i] = key;
+  v2[i] = value;
+  int max_size = cur->GetSize();
+  cur->SetSize((max_size + 1) / 2);
+  new_page->SetSize(max_size + 1 - (max_size + 1) / 2);
+  new_page->SetNextPageId(cur->GetNextPageId());
+  cur->SetNextPageId(new_page_id_);
+
+
+  for (i = 0; i < cur->GetSize(); i++) {
     cur->SetKeyAt(i, v[i]);
     cur->SetValueAt(i, v2[i]);
   }
-
-  new_page->SetSize(v.size() - mid);
-  for (size_t i = mid; i < v.size(); i++) {
-    new_page->SetKeyAt(i - mid, v[i]);
-    new_page->SetValueAt(i - mid, v2[i]);
+  for (i = 0, j = cur->GetSize(); i < new_page->GetSize(); i++, j++) {
+    new_page->SetKeyAt(i, v[j]);
+    new_page->SetValueAt(i, v2[j]);
   }
-  new_page->SetNextPageId(cur->GetNextPageId());
-  cur->SetNextPageId(new_page_id_);
+
   if (ctx.IsRootPage(ctx.page_id_)) {
     auto new_page_id_2 = bpm_->NewPage();
     auto new_page_guard2 = bpm_->WritePage(new_page_id_2);
@@ -282,92 +249,72 @@ auto BPLUSTREE_TYPE::Insert(const KeyType &key, const ValueType &value) -> bool 
 
 INDEX_TEMPLATE_ARGUMENTS
 void BPLUSTREE_TYPE::InsertInterval(InternalPage* cur, const KeyType &key, const page_id_t value, Context &ctx) {
-  int n = cur->GetSize();
-  if (n < cur->GetMaxSize()) {
-    cur->SetSize(n + 1);
-    bool flag = true;
-    for (int i = n; i > 1; i--) {
-      if (comparator_(cur->KeyAt(i - 1), key) < 0) {
-        flag = false;
-        cur->SetKeyAt(i, key);
-        cur->SetValueAt(i, value);
-        break;
-      } else {
-        cur->SetKeyAt(i, cur->KeyAt(i - 1));
-        cur->SetValueAt(i, cur->ValueAt(i - 1));
-      }
+  if (cur->GetSize() < cur->GetMaxSize()) {
+    int i = 1;
+    while (comparator_(key, cur->KeyAt(i)) > 0 && i < cur->GetSize()) i++;
+    for (int j = cur->GetSize(); j > i; j--) {
+      cur->SetKeyAt(j, cur->KeyAt(j - 1));
+      cur->SetValueAt(j, cur->ValueAt(j - 1));
     }
-    if (flag) {
-      cur->SetKeyAt(1, key);
-      cur->SetValueAt(1, value);
-    }
-    return;
-  }
-
-  auto new_page_id_ = bpm_->NewPage();
-  auto new_page_guard = bpm_->WritePage(new_page_id_);
-  auto new_page = new_page_guard.AsMut<InternalPage>();
-  new_page->Init(internal_max_size_);
-
-  std::vector<KeyType> v(n + 1);
-  std::vector<page_id_t> v2(n + 1);
-  v2[0] = cur->ValueAt(0);
-  for (int i = 1; i < n; i++) {
-    v[i] = cur->KeyAt(i);
-    v2[i] = cur->ValueAt(i);
-  }
-  bool flag = true;
-  for (int i = n; i > 1; i--) {
-    if (comparator_(v[i - 1], key) > 0) {
-      v[i] = v[i - 1];
-      v2[i] = v2[i - 1];
-    } else {
-      v[i] = key;
-      v2[i] = value;
-      flag = false;
-      break;
-    }
-  }
-  if (flag) {
-    v[1] = key;
-    v2[1] = value;
-  }
-  int mid = (n + 2) / 2;
-  cur->SetSize(mid);
-  for (int i = 1; i < mid; i ++ ) {
-    cur->SetKeyAt(i, v[i]);
-    cur->SetValueAt(i, v2[i]);
-  }
-
-  new_page->SetSize(v.size() - mid);
-  for (size_t i = mid + 1; i < v.size(); i++) {
-    new_page->SetKeyAt(i - mid, v[i]);
-    new_page->SetValueAt(i - mid, v2[i]);
-  }
-  new_page->SetValueAt(0, v2[mid]);
-
-
-  if (ctx.IsRootPage(ctx.page_id_)) {
-    auto new_page_id_2 = bpm_->NewPage();
-    auto new_page_guard2 = bpm_->WritePage(new_page_id_2);
-    auto new_page2 = new_page_guard2.AsMut<InternalPage>();
-    new_page2->Init(internal_max_size_);
-    new_page2->SetSize(2);
-    new_page2->SetKeyAt(1, v[mid]);
-    new_page2->SetValueAt(1, new_page_id_);
-    new_page2->SetValueAt(0, ctx.page_id_);
-    auto root_page_pre = ctx.header_page_->AsMut<BPlusTreeHeaderPage>();
-    root_page_pre->root_page_id_ = new_page_id_2;
+    cur->SetKeyAt(i, key);
+    cur->SetValueAt(i, value);
+    cur->SetSize(cur->GetSize() + 1);
   } else {
-    auto bk_gard = std::move(ctx.write_set_.back());
-    ctx.write_set_.pop_back();
-    auto fa = bk_gard.AsMut<InternalPage>();
-    ctx.page_id_ = bk_gard.GetPageId();
-    ctx.cur_page_ = std::move(bk_gard);
-    //InsertInterval(cur, key, value, ctx);
-    InsertInterval(fa, v[mid], new_page_id_, ctx);
-  }
+    auto new_page_id_ = bpm_->NewPage();
+    auto new_page_guard = bpm_->WritePage(new_page_id_);
+    auto new_page = new_page_guard.AsMut<InternalPage>();
+    new_page->Init(internal_max_size_);
 
+    std::vector<KeyType> v(cur->GetSize() + 1);
+    std::vector<page_id_t> v2(cur->GetSize() + 1);
+    v2[0] = cur->ValueAt(0);
+    for (int i = 1; i < cur->GetSize(); i++) {
+      v[i] = cur->KeyAt(i);
+      v2[i] = cur->ValueAt(i);
+    }
+    int i = 1, j;
+    while (comparator_(key, v[i]) > 0 && i < cur->GetSize()) i++;
+    for (j = cur->GetSize(); j > i; j--) {
+      v[j] = v[j - 1];
+      v2[j] = v2[j - 1];
+    }
+    v[i] = key;
+    v2[i] = value;
+    int mid = (cur->GetSize() + 2) / 2;
+    cur->SetSize(mid);
+    for (i = 1; i < mid; i ++ ) {
+      cur->SetKeyAt(i, v[i]);
+      cur->SetValueAt(i, v2[i]);
+    }
+
+    new_page->SetSize(v.size() - mid);
+    for (i = mid + 1; i < (int)v.size(); i++) {
+      new_page->SetKeyAt(i - mid, v[i]);
+      new_page->SetValueAt(i - mid, v2[i]);
+    }
+    new_page->SetValueAt(0, v2[mid]);
+
+    if (ctx.IsRootPage(ctx.page_id_)) {
+      auto new_page_id_2 = bpm_->NewPage();
+      auto new_page_guard2 = bpm_->WritePage(new_page_id_2);
+      auto new_page2 = new_page_guard2.AsMut<InternalPage>();
+      new_page2->Init(internal_max_size_);
+      new_page2->SetSize(2);
+      new_page2->SetKeyAt(1, v[mid]);
+      new_page2->SetValueAt(1, new_page_id_);
+      new_page2->SetValueAt(0, ctx.page_id_);
+      auto root_page_pre = ctx.header_page_->AsMut<BPlusTreeHeaderPage>();
+      root_page_pre->root_page_id_ = new_page_id_2;
+    } else {
+      auto bk_gard = std::move(ctx.write_set_.back());
+      ctx.write_set_.pop_back();
+      auto fa = bk_gard.AsMut<InternalPage>();
+      ctx.page_id_ = bk_gard.GetPageId();
+      ctx.cur_page_ = std::move(bk_gard);
+      //InsertInterval(cur, key, value, ctx);
+      InsertInterval(fa, v[mid], new_page_id_, ctx);
+    }
+  }
 }
 
 /*****************************************************************************
@@ -708,6 +655,10 @@ auto BPLUSTREE_TYPE::Begin() -> INDEXITERATOR_TYPE {
   //std::unique_lock lock(*bplus_latch_);
   auto guard = bpm_->WritePage(header_page_id_);
   auto res = guard.As<BPlusTreeHeaderPage>();
+  if (res->root_page_id_ == INVALID_PAGE_ID) {
+    bplus_latch_->unlock();
+    return INDEXITERATOR_TYPE(bpm_, -1, 0, true);
+  }
   auto root_guard = bpm_->WritePage(res->root_page_id_);
   auto ans = root_guard.As<BPlusTreePage>();
   if (ans->IsLeafPage()) {
@@ -742,6 +693,10 @@ auto BPLUSTREE_TYPE::Begin(const KeyType &key) -> INDEXITERATOR_TYPE {
   bplus_latch_->lock();
   auto guard = bpm_->WritePage(header_page_id_);
   auto ans = guard.As<BPlusTreeHeaderPage>();
+  if (ans->root_page_id_ == INVALID_PAGE_ID) {
+    bplus_latch_->unlock();
+    return INDEXITERATOR_TYPE(bpm_, -1, 0, true);
+  }
   auto root_guard = bpm_->WritePage(ans->root_page_id_);
   auto res = root_guard.AsMut<BPlusTreePage>();
   page_id_t page_id = -1;
