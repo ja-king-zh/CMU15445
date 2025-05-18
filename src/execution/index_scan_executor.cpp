@@ -13,7 +13,7 @@
 
 namespace bustub {
 IndexScanExecutor::IndexScanExecutor(ExecutorContext *exec_ctx, const IndexScanPlanNode *plan)
-    : AbstractExecutor(exec_ctx), plan_(plan), scaned_(false) {}
+    : AbstractExecutor(exec_ctx), plan_(plan) {}
 
 void IndexScanExecutor::Init() {
   //throw NotImplementedException("IndexScanExecutor is not implemented");

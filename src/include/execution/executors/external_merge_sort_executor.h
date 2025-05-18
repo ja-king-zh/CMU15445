@@ -120,14 +120,14 @@ class MergeSortRun {
    */
   auto End() -> Iterator { return {}; }
 
- private:
+ //private:
   /** The page IDs of the sort pages that store the sorted tuples. */
   std::vector<page_id_t> pages_;
   /**
    * The buffer pool manager used to read sort pages. The buffer pool manager is responsible for
    * deleting the sort pages when they are no longer needed.
    */
-  [[maybe_unused]] BufferPoolManager *bpm_;
+  BufferPoolManager *bpm_;
 };
 
 /**
@@ -163,6 +163,10 @@ class ExternalMergeSortExecutor : public AbstractExecutor {
   TupleComparator cmp_;
 
   /** TODO: You will want to add your own private members here. */
+ //std::unique_ptr<MergeSortRun> merge_sort_run_;
+ std::unique_ptr<AbstractExecutor> child_executor_;
+ std::vector<SortEntry> v{};
+ uint32_t index_=0;
 };
 
 }  // namespace bustub

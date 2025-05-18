@@ -63,10 +63,18 @@ auto Optimizer::OptimizeNLJAsHashJoin(const AbstractPlanNodeRef &plan) -> Abstra
     const auto&join_plan = dynamic_cast<const NestedLoopJoinPlanNode&>(*optimized_plan);
     // 拿到谓词
     auto predicate = join_plan.Predicate();
+    // auto logic_expr = std::dynamic_pointer_cast<LogicExpression>(predicate);
+    // if (logic_expr == nullptr) {
+    //   return optimized_plan;
+    // }
+    //std::cout << predicate->ToString() << std::endl;
     // 查看改谓词两侧是不是等值表达式，解析表达式
     std::vector<AbstractExpressionRef> left_key_expressions;
     std::vector<AbstractExpressionRef> right_key_expressions;
     ParseAndExpression(predicate, &left_key_expressions, &right_key_expressions);
+    if (left_key_expressions.empty()) {
+      return optimized_plan;
+    }
     return std::make_shared<HashJoinPlanNode>(join_plan.output_schema_, join_plan.GetLeftPlan(),
                                             join_plan.GetRightPlan(), left_key_expressions, right_key_expressions,
                                             join_plan.GetJoinType());

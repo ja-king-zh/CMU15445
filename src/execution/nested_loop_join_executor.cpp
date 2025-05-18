@@ -37,6 +37,7 @@ void NestedLoopJoinExecutor::Init() {
   left_executor_->Init();
   right_executor_->Init();
   while (right_executor_->Next(&tuple, &rid)) {
+    //std::cout << "cnm1" << std::endl;
     right_.push_back(tuple);
   }
   joined_ = false;
@@ -45,7 +46,7 @@ void NestedLoopJoinExecutor::Init() {
 
 auto NestedLoopJoinExecutor::Next(Tuple *tuple, RID *rid) -> bool {
   if (joined_) {
-    //std::cout << "cnm" << std::endl;
+    //std::cout << "cnm2" << std::endl;
     auto left_tuple = left_pre_;
     for (uint32_t i = right_index_ + 1; i < right_.size(); i++) {
       auto value = plan_->Predicate()->EvaluateJoin(&left_tuple, left_executor_->GetOutputSchema(),

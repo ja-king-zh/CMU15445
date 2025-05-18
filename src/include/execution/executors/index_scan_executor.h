@@ -44,7 +44,7 @@ class IndexScanExecutor : public AbstractExecutor {
  private:
   /** The index scan plan node to be executed. */
   const IndexScanPlanNode *plan_;
-  bool scaned_;
+  //bool scaned_;
   std::vector<RID> rids_;
   std::vector<RID>::iterator iter_;
   BPlusTreeIndexIteratorForTwoIntegerColumn iter2_;
